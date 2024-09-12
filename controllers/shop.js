@@ -2,34 +2,43 @@ const Product = require('../models/product');
 const Cart = require('../models/cart');
 
 exports.getProducts = (req, res, next) => {
-  Product.fetchAll(products => {
+  Product.fetchAll()
+  .then(([rows, fieldData]) => {
     res.render('shop/product-list', {
-      prods: products,
+      prods: rows,
       pageTitle: 'All Products',
       path: '/products'
     });
-  });
+  })
+  .catch(err => console.log(err));
 };
 
 exports.getProduct = (req, res, next) => {
   const prodId = req.params.productId;
-  Product.findById(prodId, product => {
+  Product.findById(prodId)
+  .then(([product]) => {
+    if (!product.length) { // Check if no product was found
+      return res.status(404).render('404', { pageTitle: 'Product Not Found' });
+  }
     res.render('shop/product-detail', {
-      product: product,
-      pageTitle: product.title,
+      product: product[0],
+      pageTitle: product[0].title,
       path: '/products'
     });
-  });
+  })
+  .catch(err => console.log(err));
 };
 
 exports.getIndex = (req, res, next) => {
-  Product.fetchAll(products => {
+  Product.fetchAll()
+  .then(([rows, fieldData]) => {
     res.render('shop/index', {
-      prods: products,
+      prods: rows,
       pageTitle: 'Shop',
       path: '/'
     });
-  });
+  })
+  .catch(err => console.log(err));
 };
 
 exports.getCart = (req, res, next) => {
@@ -81,4 +90,13 @@ exports.getCheckout = (req, res, next) => {
     path: '/checkout',
     pageTitle: 'Checkout'
   });
+};
+
+exports.postDeleteProduct = (req, res, next) => {
+  const prodId = req.body.productId;
+  Product.deleteById(prodId)
+  .then(() => {
+    res.redirect('/');
+  })
+  .catch(err => console.log(err));
 };
