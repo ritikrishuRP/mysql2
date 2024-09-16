@@ -6,7 +6,10 @@ const bodyParser = require('body-parser');
 const errorController = require('./controllers/error');
 const sequelize = require('./util/database.js');
 const Product = require('./models/product');
-const User = require('./models/user')
+const User = require('./models/user');
+const Cart = require('./models/cart');
+const CartItem = require('./models/cart-item')
+
 
 
 var cors = require('cors');
@@ -53,6 +56,10 @@ app.use(errorController.get404);
 Product.belongsTo(User, {constratints: true, onDelete: 'CASCADE'});
 //HERE WE CAN DEFINE HOW RELATIONSHIP MANAGED, if user deleted all it's product deleted refers by cascade
 User.hasMany(Product);
+User.hasOne(Cart);
+Cart.belongsTo(User);
+Cart.belongsToMany(Product, {through: CartItem}); //telling sequelize where this relation item will be stored
+Product.belongsToMany(Cart, {through: CartItem});
 
 sequelize.sync().then(result => {
      return User.findByPk(1);
@@ -65,7 +72,10 @@ sequelize.sync().then(result => {
     return user;
 })
 .then(user => {
-    console.log(user);
+    //console.log(user);
+    return user.createCart();
+})
+.then(cart => {
     app.listen(3000);
 })
 .catch(err => console.log(err))
